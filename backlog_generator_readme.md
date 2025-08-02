@@ -53,7 +53,4 @@ Each story includes detailed acceptance criteria and can be customized with prio
 - Startups organizing MVP features
 - Agile teams creating sprint backlogs
 - Learning agile methodology and user story writing
-
-## License
-
-MIT License - see LICENSE file for details.
+ 
