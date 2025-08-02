@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Backlog Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%);
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1152px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 32px;
+        }
+
+        /* Header Styles */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #6b7280;
+        }
+
+        /* Project Setup Styles */
+        .project-setup {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: linear-gradient(to right, #dbeafe, #e0e7ff);
+            border-radius: 8px;
+        }
+
+        .project-setup h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .generate-btn {
+            margin-top: 16px;
+            padding: 12px 24px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            background: #1d4ed8;
+        }
+
+        .generate-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Backlog Header */
+        .backlog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .backlog-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .add-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .add-btn:hover {
+            background: #047857;
+        }
+
+        /* Backlog Items */
+        .backlog-items {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .backlog-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .backlog-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            gap: 16px;
+        }
+
+        .item-title {
+            flex: 1;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            padding: 8px;
+            transition: all 0.2s;
+        }
+
+        .item-title:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+
+        .item-badges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-high {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .badge-medium {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .badge-low {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .badge-points {
+            background: #faf5ff;
+            color: #9333ea;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+
+        .delete-btn:hover {
+            color: #dc2626;
+        }
+
+        /* Form Sections */
+        .form-section {
+            margin-bottom: 16px;
+        }
+
+        .form-section label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-section textarea,
+        .form-section select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .form-section textarea:focus,
+        .form-section select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Acceptance Criteria */
+        .criteria-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .criteria-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .criteria-icon {
+            color: #22c55e;
+            font-size: 1rem;
+        }
+
+        .criteria-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .criteria-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .controls select {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Summary */
+        .summary {
+            margin-top: 32px;
+            padding: 24px;
+            background: linear-gradient(to right, #ecfdf5, #dbeafe);
+            border-radius: 8px;
+        }
+
+        .summary h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+            text-align: center;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .summary-number.blue { color: #2563eb; }
+        .summary-number.red { color: #dc2626; }
+        .summary-number.purple { color: #9333ea; }
+        .summary-number.green { color: #16a34a; }
+
+        .summary-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .loading h3 {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 1.875rem;
+            }
+            
+            .item-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            
+            .item-badges {
+                justify-content: flex-start;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .controls select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 Product Backlog Generator</h1>
+            <p>Transform your rough ideas into professional user stories</p>
+        </div>
+
+        <!-- Project Setup -->
+        <div class="project-setup">
+            <h2>Project Setup</h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="projectName">Project Name</label>
+                    <input
+                        type="text"
+                        id="projectName"
+                        placeholder="e.g., E-commerce Mobile App"
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="roughIdeas">Your Rough Ideas (one per line)</label>
+                    <textarea
+                        id="roughIdeas"
+                        placeholder="login system&#10;shopping cart&#10;user profile&#10;search products&#10;payment integration"
+                        rows="4"
+                    ></textarea>
+                </div>
+            </div>
+
+            <button id="generateBtn" class="generate-btn">
+                ✨ Generate Product Backlog
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading" style="display: none;">
+            <h3>🤖 AI is analyzing your ideas...</h3>
+            <p>Creating professional user stories with acceptance criteria</p>
+        </div>
+
+        <!-- Generated Backlog -->
+        <div id="backlogSection" style="display: none;">
+            <div class="backlog-header">
+                <h2 id="backlogTitle">📋 Product Backlog for "Your Project"</h2>
+                <button id="addItemBtn" class="add-btn">
+                    <span>➕</span>
+                    Add Item
+                </button>
+            </div>
+
+            <div id="backlogItems" class="backlog-items">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+
+            <!-- Summary -->
+            <div class="summary">
+                <h3>📊 Backlog Summary</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div id="totalItems" class="summary-number blue">0</div>
+                        <div class="summary-label">Total Items</div>
+                    </div>
+                    <div class="summary-item">
+                        <div id="highPriority" class="summary-number red">0</div>
+                        <div class="summary-label">High Priority</div>
+                    </div>
+                    <div class="summary-item">
+                        <div id="totalPoints" class="summary-number purple">0</div>
+                        <div class="summary-label">Total Points</div>
+                    </div>
+                    <div class="summary-item">
+                        <div id="completedItems" class="summary-number green">0</div>
+                        <div class="summary-label">Completed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let backlogItems = [];
+        let isGenerating = false;
+
+        // Templates
+        const templates = {
+            'login': {
+                story: 'As a user, I want to log in with my email and password so that I can access my personal account',
+                acceptance: ['Login form has email and password fields', 'Invalid credentials show error message', 'Successful login redirects to dashboard', 'Remember me option available']
+            },
+            'search': {
+                story: 'As a user, I want to search for items so that I can quickly find what I\'m looking for',
+                acceptance: ['Search box is visible on main page', 'Results appear within 2 seconds', 'No results message when nothing found', 'Search works with partial matches']
+            },
+            'profile': {
+                story: 'As a user, I want to view and edit my profile so that I can keep my information updated',
+                acceptance: ['Profile page shows current information', 'Edit button allows modifications', 'Save button updates information', 'Validation for required fields']
+            },
+            'cart': {
+                story: 'As a customer, I want to add items to my shopping cart so that I can purchase multiple items together',
+                acceptance: ['Add to cart button on product pages', 'Cart icon shows item count', 'Can view cart contents', 'Can remove items from cart']
+            },
+            'payment': {
+                story: 'As a customer, I want to make secure payments so that I can complete my purchases safely',
+                acceptance: ['Multiple payment methods supported', 'Payment information is encrypted', 'Payment confirmation is shown', 'Failed payments show clear error messages']
+            }
+        };
+
+        const userTypes = ['user', 'customer', 'admin', 'visitor', 'manager', 'developer'];
+
+        // DOM elements
+        const projectNameInput = document.getElementById('projectName');
+        const roughIdeasInput = document.getElementById('roughIdeas');
+        const generateBtn = document.getElementById('generateBtn');
+        const loadingState = document.getElementById('loadingState');
+        const backlogSection = document.getElementById('backlogSection');
+        const backlogTitle = document.getElementById('backlogTitle');
+        const addItemBtn = document.getElementById('addItemBtn');
+        const backlogItemsContainer = document.getElementById('backlogItems');
+
+        // Event listeners
+        generateBtn.addEventListener('click', generateBacklog);
+        addItemBtn.addEventListener('click', addCustomItem);
+
+        // Update button state based on input
+        roughIdeasInput.addEventListener('input', updateGenerateButton);
+
+        function updateGenerateButton() {
+            const hasInput = roughIdeasInput.value.trim().length > 0;
+            generateBtn.disabled = !hasInput || isGenerating;
+        }
+
+        function generateBacklog() {
+            if (isGenerating || !roughIdeasInput.value.trim()) return;
+
+            isGenerating = true;
+            generateBtn.textContent = '🤖 Generating Backlog...';
+            generateBtn.disabled = true;
+            loadingState.style.display = 'block';
+            backlogSection.style.display = 'none';
+
+            // Simulate AI processing
+            setTimeout(() => {
+                const ideas = roughIdeasInput.value.toLowerCase().split('\n').filter(idea => idea.trim());
+                const generatedItems = [];
+
+                ideas.forEach((idea, index) => {
+                    const trimmedIdea = idea.trim();
+                    let generatedStory = '';
+                    let acceptanceCriteria = [];
+                    let priority = 'Medium';
+                    let storyPoints = 3;
+
+                    // Check if idea matches templates
+                    const matchedTemplate = Object.keys(templates).find(key => 
+                        trimmedIdea.includes(key) || trimmedIdea.includes(key.slice(0, -1))
+                    );
+
+                    if (matchedTemplate) {
+                        generatedStory = templates[matchedTemplate].story;
+                        acceptanceCriteria = [...templates[matchedTemplate].acceptance];
+                    } else {
+                        // Generate custom story
+                        const userType = userTypes[Math.floor(Math.random() * userTypes.length)];
+                        generatedStory = `As a ${userType}, I want to ${trimmedIdea} so that I can achieve my goals effectively`;
+                        acceptanceCriteria = [
+                            `${trimmedIdea} functionality is accessible`,
+                            'User interface is intuitive and responsive',
+                            'Error handling for edge cases',
+                            'Feature works on mobile and desktop'
+                        ];
+                    }
+
+                    // Assign priority based on keywords
+                    if (trimmedIdea.includes('login') || trimmedIdea.includes('auth') || trimmedIdea.includes('security')) {
+                        priority = 'High';
+                        storyPoints = 5;
+                    } else if (trimmedIdea.includes('nice to have') || trimmedIdea.includes('optional')) {
+                        priority = 'Low';
+                        storyPoints = 2;
+                    }
+
+                    generatedItems.push({
+                        id: Date.now() + index,
+                        title: trimmedIdea.charAt(0).toUpperCase() + trimmedIdea.slice(1),
+                        story: generatedStory,
+                        acceptanceCriteria,
+                        priority,
+                        storyPoints,
+                        status: 'To Do'
+                    });
+                });
+
+                backlogItems = generatedItems;
+                renderBacklog();
+                updateSummary();
+
+                isGenerating = false;
+                generateBtn.textContent = '✨ Generate Product Backlog';
+                generateBtn.disabled = false;
+                loadingState.style.display = 'none';
+                backlogSection.style.display = 'block';
+                
+                // Update title
+                const projectName = projectNameInput.value || 'Your Project';
+                backlogTitle.textContent = `📋 Product Backlog for "${projectName}"`;
+            }, 2000);
+        }
+
+        function addCustomItem() {
+            const newItem = {
+                id: Date.now(),
+                title: 'New Feature',
+                story: 'As a user, I want to [describe feature] so that I can [benefit]',
+                acceptanceCriteria: ['Define acceptance criteria here'],
+                priority: 'Medium',
+                storyPoints: 3,
+                status: 'To Do'
+            };
+            backlogItems.push(newItem);
+            renderBacklog();
+            updateSummary();
+        }
+
+        function deleteItem(id) {
+            backlogItems = backlogItems.filter(item => item.id !== id);
+            renderBacklog();
+            updateSummary();
+        }
+
+        function updateItem(id, field, value) {
+            const item = backlogItems.find(item => item.id === id);
+            if (item) {
+                if (field === 'storyPoints') {
+                    item[field] = parseInt(value);
+                } else {
+                    item[field] = value;
+                }
+                
+                // Update the specific badge elements if they exist
+                if (field === 'priority') {
+                    const priorityBadge = document.querySelector(`[data-item-id="${id}"] .priority-badge`);
+                    if (priorityBadge) {
+                        priorityBadge.className = `badge priority-badge ${getPriorityClass(value)}`;
+                        priorityBadge.textContent = value;
+                    }
+                } else if (field === 'storyPoints') {
+                    const pointsBadge = document.querySelector(`[data-item-id="${id}"] .points-badge`);
+                    if (pointsBadge) {
+                        pointsBadge.textContent = `${value} pts`;
+                    }
+                }
+                
+                updateSummary();
+            }
+        }
+
+        function updateCriteria(id, criteriaIndex, value) {
+            const item = backlogItems.find(item => item.id === id);
+            if (item && item.acceptanceCriteria[criteriaIndex] !== undefined) {
+                item.acceptanceCriteria[criteriaIndex] = value;
+            }
+        }
+
+        function getPriorityClass(priority) {
+            switch(priority) {
+                case 'High': return 'badge-high';
+                case 'Medium': return 'badge-medium';
+                case 'Low': return 'badge-low';
+                default: return 'badge-medium';
+            }
+        }
+
+        function renderBacklog() {
+            backlogItemsContainer.innerHTML = '';
+
+            backlogItems.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'backlog-item fade-in';
+                itemDiv.setAttribute('data-item-id', item.id);
+                itemDiv.innerHTML = `
+                    <div class="item-header">
+                        <input
+                            type="text"
+                            value="${item.title}"
+                            class="item-title"
+                            onchange="updateItem(${item.id}, 'title', this.value)"
+                        />
+                        <div class="item-badges">
+                            <span class="badge priority-badge ${getPriorityClass(item.priority)}">
+                                ${item.priority}
+                            </span>
+                            <span class="badge badge-points points-badge">
+                                ${item.storyPoints} pts
+                            </span>
+                            <button class="delete-btn" onclick="deleteItem(${item.id})">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label>📝 User Story</label>
+                        <textarea
+                            rows="2"
+                            onchange="updateItem(${item.id}, 'story', this.value)"
+                        >${item.story}</textarea>
+                    </div>
+
+                    <div class="form-section">
+                        <label>✅ Acceptance Criteria</label>
+                        <div class="criteria-list">
+                            ${item.acceptanceCriteria.map((criteria, criteriaIndex) => `
+                                <div class="criteria-item">
+                                    <span class="criteria-icon">✅</span>
+                                    <input
+                                        type="text"
+                                        value="${criteria}"
+                                        class="criteria-input"
+                                        onchange="updateCriteria(${item.id}, ${criteriaIndex}, this.value)"
+                                    />
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <select onchange="updateItem(${item.id}, 'priority', this.value)">
+                            <option value="High" ${item.priority === 'High' ? 'selected' : ''}>High Priority</option>
+                            <option value="Medium" ${item.priority === 'Medium' ? 'selected' : ''}>Medium Priority</option>
+                            <option value="Low" ${item.priority === 'Low' ? 'selected' : ''}>Low Priority</option>
+                        </select>
+
+                        <select onchange="updateItem(${item.id}, 'storyPoints', this.value)">
+                            <option value="1" ${item.storyPoints === 1 ? 'selected' : ''}>1 Point</option>
+                            <option value="2" ${item.storyPoints === 2 ? 'selected' : ''}>2 Points</option>
+                            <option value="3" ${item.storyPoints === 3 ? 'selected' : ''}>3 Points</option>
+                            <option value="5" ${item.storyPoints === 5 ? 'selected' : ''}>5 Points</option>
+                            <option value="8" ${item.storyPoints === 8 ? 'selected' : ''}>8 Points</option>
+                        </select>
+
+                        <select onchange="updateItem(${item.id}, 'status', this.value)">
+                            <option value="To Do" ${item.status === 'To Do' ? 'selected' : ''}>To Do</option>
+                            <option value="In Progress" ${item.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="Done" ${item.status === 'Done' ? 'selected' : ''}>Done</option>
+                        </select>
+                    </div>
+                `;
+                backlogItemsContainer.appendChild(itemDiv);
+            });
+        }
+
+        function updateSummary() {
+            document.getElementById('totalItems').textContent = backlogItems.length;
+            document.getElementById('highPriority').textContent = backlogItems.filter(item => item.priority === 'High').length;
+            document.getElementById('totalPoints').textContent = backlogItems.reduce((sum, item) => sum + item.storyPoints, 0);
+            document.getElementById('completedItems').textContent = backlogItems.filter(item => item.status === 'Done').length;
+        }
+
+        // Initialize
+        updateGenerateButton();
+    </script>
+</body>
+</html>
